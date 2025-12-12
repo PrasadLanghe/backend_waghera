@@ -11,6 +11,13 @@ import contactRoutes from './src/routes/contact.js';
 import authRoutes from './src/routes/auth.js';
 import bookingRoutes from './src/routes/bookingRoutes.js';
 import availabilityRoutes from './src/routes/availabilityRoutes.js';
+import eventPhotoRoutes from './src/routes/eventPhotoRoutes.js'
+import teamRoutes from './src/routes/teamRoutes.js'
+import activityRoutes from './src/routes/activityRoutes.js'
+import dashboardRoutes from './src/routes/dashboardRoutes.js'
+import menuRoutes from './src/routes/menuRoutes.js'
+
+
 
 dotenv.config();
 connectDB();
@@ -44,9 +51,17 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/auth", authRoutes);
 
+
+
 // custom routes
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/availability", availabilityRoutes);
+app.use("/api/events/photos", eventPhotoRoutes);
+app.use("/api/team", teamRoutes);
+app.use("/api/activities", activityRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/menu", menuRoutes);
+
 
 // ------------------------------
 // 404 Fallback
