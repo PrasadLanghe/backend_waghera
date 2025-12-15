@@ -1,20 +1,28 @@
 import express from "express";
-import upload from '../middleware/multer.js'; // your Multer config
+import upload from "../middleware/multer.js";
 import {
   uploadImage,
   getAllImages,
   getImagesByCategory,
+  updateImage,
+  deleteImage,
 } from "../controller/galleryController.js";
 
 const router = express.Router();
 
-// Upload image route
+// Upload image
 router.post("/upload", upload.single("file"), uploadImage);
 
-// Get all images
+// Get all
 router.get("/all", getAllImages);
 
-// Get images by category
+// Get by category
 router.get("/category/:category", getImagesByCategory);
+
+// Update (with optional image upload)
+router.put("/update/:id", upload.single("file"), updateImage);
+
+// Delete
+router.delete("/delete/:id", deleteImage);
 
 export default router;

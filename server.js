@@ -17,7 +17,7 @@ import activityRoutes from './src/routes/activityRoutes.js'
 import dashboardRoutes from './src/routes/dashboardRoutes.js'
 import menuRoutes from './src/routes/menuRoutes.js'
 
-
+import uploadRoutes from "./src/routes/uploadRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -56,12 +56,13 @@ app.use("/api/auth", authRoutes);
 // custom routes
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/availability", availabilityRoutes);
-app.use("/api/events/photos", eventPhotoRoutes);
+// app.use("/api/events/photos", eventPhotoRoutes);
+app.use("/api/event-photos", eventPhotoRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/activities", activityRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/menu", menuRoutes);
-
+app.use("/api/uploads", uploadRoutes);
 
 // ------------------------------
 // 404 Fallback
