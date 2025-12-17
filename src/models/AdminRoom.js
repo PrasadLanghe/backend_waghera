@@ -23,4 +23,4 @@ const AdminRoomSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("AdminRoom", AdminRoomSchema);
+export default mongoose.model("Room", AdminRoomSchema);
