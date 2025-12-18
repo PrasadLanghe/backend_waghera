@@ -149,7 +149,7 @@ const allowedOrigins = [
 
   "https://waghera.onrender.com",
 
-  "https://wagheraagrotourism.vercel.app/"
+  "https://wagheraagrotourism.vercel.app"
 
 ];
 
