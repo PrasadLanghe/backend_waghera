@@ -143,14 +143,69 @@ import { sendRegistrationEmail } from "../services/emailService.js"; // ✅ NEW
 // ---------------------------
 // REGISTER USER
 // ---------------------------
+// export const registerUser = async (req, res) => {
+//   try {
+//     const { name, email, contact, password } = req.body;
+
+//     if (!name || !email || !password)
+//       return res.status(400).json({ message: "Name, email & password required" });
+//     console.log("Register request email:", email);
+
+//     // const existingUser = await User.findOne({ email });
+//     //     console.log("Existing user from DB:", existingUser); // <--- add this
+
+
+//     // if (existingUser)
+//     //   return res.status(400).json({ message: "Email already registered" });
+
+//     const existingUser = await User.findOne({ email });
+// console.log("Register email:", email);
+// console.log("Existing user:", existingUser);
+// if (existingUser)
+//   return res.status(400).json({ message: "Email already registered" });
+
+
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const user = new User({
+//       name,
+//       email,
+//       contact,
+//       password: hashedPassword,
+//     });
+
+//     await user.save();
+
+//     // ✅ SEND REGISTRATION EMAIL
+//     await sendRegistrationEmail(email, name);
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Registration successful",
+//       userId: user._id,
+//     });
+
+//   } catch (error) {
+//     console.error("Register Error:", error);
+//     res.status(500).json({ message: "Server error during registration" });
+//   }
+// };
+
 export const registerUser = async (req, res) => {
   try {
     const { name, email, contact, password } = req.body;
 
     if (!name || !email || !password)
-      return res.status(400).json({ message: "Name, email & password required" });
+      return res
+        .status(400)
+        .json({ message: "Name, email & password required" });
 
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    console.log("➡️ Incoming register:", { name, email: normalizedEmail });   // <---
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    console.log("🔍 existingUser:", existingUser);                            // <---
+
     if (existingUser)
       return res.status(400).json({ message: "Email already registered" });
 
@@ -158,27 +213,28 @@ export const registerUser = async (req, res) => {
 
     const user = new User({
       name,
-      email,
+      email: normalizedEmail,
       contact,
       password: hashedPassword,
     });
 
     await user.save();
 
-    // ✅ SEND REGISTRATION EMAIL
     await sendRegistrationEmail(email, name);
+
+    console.log("✅ New user saved:", user._id);                               // <---
 
     res.status(201).json({
       success: true,
       message: "Registration successful",
       userId: user._id,
     });
-
   } catch (error) {
     console.error("Register Error:", error);
     res.status(500).json({ message: "Server error during registration" });
   }
 };
+
 
 // ---------------------------
 // LOGIN USER
