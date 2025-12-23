@@ -12,4 +12,7 @@ const bookingSchema = new mongoose.Schema({
     extraServices: [{ type: mongoose.Schema.Types.ObjectId, ref: "ExtraService" }]
 }, { timestamps: true });
 
+
+bookingSchema.index({ room: 1, checkInDate: 1, checkOutDate: 1 });
+
 export default mongoose.model("Booking", bookingSchema);
