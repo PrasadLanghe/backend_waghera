@@ -182,11 +182,125 @@ const EXTRA_BED_PRICE = 300;
 
 
 
+// export const handleCreateBooking = async (req, res) => {
+//   try {
+//     const data = req.body;
+
+//     // 1️⃣ Parallel fetch (FASTER)
+//     const [room, user] = await Promise.all([
+//       Room.findById(data.roomId),
+//       User.findById(data.userId)
+//     ]);
+
+//     if (!room || room.status !== "AVAILABLE")
+//       return res.status(400).json({ message: "Room not available" });
+
+//     if (!user)
+//       return res.status(400).json({ message: "User not found" });
+
+//     // 2️⃣ FAST overlap check (Mongo only)
+//     const conflict = await Booking.findOne({
+//       room: room._id,
+//       checkInDate: { $lt: new Date(data.checkOutDate) },
+//       checkOutDate: { $gt: new Date(data.checkInDate) }
+//     });
+
+//     if (conflict)
+//       return res.status(409).json({ message: "Room already booked for selected dates" });
+
+//     // 3️⃣ Fetch extra services
+//     const services = data.serviceIds?.length
+//       ? await ExtraService.find({ _id: { $in: data.serviceIds } })
+//       : [];
+
+//     // 4️⃣ Price calculation
+//     const nights =
+//       Math.ceil((new Date(data.checkOutDate) - new Date(data.checkInDate)) / 86400000);
+
+//     const totalPrice =
+//       room.price * nights +
+//       services.reduce((s, x) => s + x.pricePerNight * nights, 0) +
+//       (data.extraBed || 0) * EXTRA_BED_PRICE * nights;
+
+//     // 5️⃣ Save booking (CRITICAL PATH)
+//     const savedBooking = await Booking.create({
+//       room: room._id,
+//       user: user._id,
+//       checkInDate: data.checkInDate,
+//       checkOutDate: data.checkOutDate,
+//       adults: data.adults,
+//       children: data.children,
+//       extraBed: data.extraBed,
+//       extraServices: services.map(s => s._id),
+//       totalPrice
+//     });
+
+//     // ✅ RESPOND IMMEDIATELY
+//     res.status(201).json({
+//       success: true,
+//       message: "Booking confirmed",
+//       bookingId: savedBooking._id
+//     });
+
+//     // 🔥 BACKGROUND TASK (NON-BLOCKING)
+//     process.nextTick(async () => {
+//       try {
+//         const pdf = await generatePdf(savedBooking);
+
+//         const htmlBody = `<h2>Booking Confirmed</h2>
+//           <p>Hello ${user.name}, your booking is confirmed.</p>`;
+
+//         await sendEmailWithAttachment(
+//           user.email,
+//           `Booking Confirmation - ${savedBooking._id}`,
+//           htmlBody,
+//           pdf,
+//           `booking_${savedBooking._id}.pdf`
+//         );
+//       } catch (e) {
+//         console.error("Background task failed:", e.message);
+//       }
+//     });
+
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export const handleCreateBooking = async (req, res) => {
   try {
     const data = req.body;
 
-    // 1️⃣ Parallel fetch (FASTER)
+    // 1️⃣ Parallel DB fetch
     const [room, user] = await Promise.all([
       Room.findById(data.roomId),
       User.findById(data.userId)
@@ -198,7 +312,7 @@ export const handleCreateBooking = async (req, res) => {
     if (!user)
       return res.status(400).json({ message: "User not found" });
 
-    // 2️⃣ FAST overlap check (Mongo only)
+    // 2️⃣ Fast overlap check
     const conflict = await Booking.findOne({
       room: room._id,
       checkInDate: { $lt: new Date(data.checkOutDate) },
@@ -208,7 +322,7 @@ export const handleCreateBooking = async (req, res) => {
     if (conflict)
       return res.status(409).json({ message: "Room already booked for selected dates" });
 
-    // 3️⃣ Fetch extra services
+    // 3️⃣ Extra services
     const services = data.serviceIds?.length
       ? await ExtraService.find({ _id: { $in: data.serviceIds } })
       : [];
@@ -222,7 +336,7 @@ export const handleCreateBooking = async (req, res) => {
       services.reduce((s, x) => s + x.pricePerNight * nights, 0) +
       (data.extraBed || 0) * EXTRA_BED_PRICE * nights;
 
-    // 5️⃣ Save booking (CRITICAL PATH)
+    // 5️⃣ Save booking
     const savedBooking = await Booking.create({
       room: room._id,
       user: user._id,
@@ -235,30 +349,66 @@ export const handleCreateBooking = async (req, res) => {
       totalPrice
     });
 
-    // ✅ RESPOND IMMEDIATELY
+    // ✅ FAST RESPONSE (NO LOADING)
     res.status(201).json({
       success: true,
       message: "Booking confirmed",
       bookingId: savedBooking._id
     });
 
-    // 🔥 BACKGROUND TASK (NON-BLOCKING)
-    process.nextTick(async () => {
+    // 🟢 RELIABLE BACKGROUND EMAIL (THIS FIXES YOUR ISSUE)
+    setImmediate(async () => {
       try {
-        const pdf = await generatePdf(savedBooking);
+        const pdfBuffer = await generatePdf(savedBooking);
 
-        const htmlBody = `<h2>Booking Confirmed</h2>
-          <p>Hello ${user.name}, your booking is confirmed.</p>`;
+        const renderExtraServices = (services, nights) =>
+          services.length
+            ? services.map(s =>
+                `${s.name} (₹${s.pricePerNight} x ${nights} nights)`
+              ).join("<br>")
+            : "None";
+
+        // ✅ YOUR ORIGINAL EMAIL FORMAT (UNCHANGED)
+        const htmlBody = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
+          <div style="max-width: 600px; margin: auto; background: white; border-radius: 10px; padding: 20px;">
+            <h2 style="color: #2c7a7b; text-align:center;">
+              🌿 Waghera Agro Tourism - Booking Confirmed 🌿
+            </h2>
+
+            <p>Hello <b>${user.name}</b>,</p>
+
+            <h3>📋 Booking Details</h3>
+            <p>
+             <b>Room:</b> ${room.roomName || room.name}<br>
+
+              <b>Check-in:</b> ${new Date(savedBooking.checkInDate).toLocaleDateString()}<br>
+              <b>Check-out:</b> ${new Date(savedBooking.checkOutDate).toLocaleDateString()}<br>
+              <b>Extra Services:</b> ${renderExtraServices(services, nights)}<br>
+              <b>Total Price:</b> ₹${savedBooking.totalPrice}
+            </p>
+
+            <p>Your booking receipt is attached as PDF.</p>
+
+            <p style="color:#2c7a7b;">
+              Warm Regards,<br>
+              <b>Waghera Agro Tourism Team</b>
+            </p>
+          </div>
+        </div>
+        `;
 
         await sendEmailWithAttachment(
           user.email,
-          `Booking Confirmation - ${savedBooking._id}`,
+          `🌿 Booking Confirmation - #${savedBooking._id}`,
           htmlBody,
-          pdf,
+          pdfBuffer,
           `booking_${savedBooking._id}.pdf`
         );
-      } catch (e) {
-        console.error("Background task failed:", e.message);
+
+        console.log("✅ Booking email sent");
+      } catch (err) {
+        console.error("❌ Email/PDF error:", err.message);
       }
     });
 
@@ -266,9 +416,6 @@ export const handleCreateBooking = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
-
 
 
 
