@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import ExtraService from "../models/extraServiceModel.js";
 import { generatePdf } from "../services/pdfService.js";
 import { sendEmailWithAttachment } from "../services/emailService.js";
+import { checkAvailability } from "../services/availabilityService.js";
 
 const EXTRA_BED_PRICE = 300;
 
@@ -24,15 +25,38 @@ export const handleCreateBooking = async (req, res) => {
         if (!user) throw new Error("User not found");
 
         // 3. Check overlapping bookings
-        const overlaps = await Booking.find({
-            room: room._id,
-            $or: [
-                { checkInDate: { $lt: new Date(data.checkOutDate), $gte: new Date(data.checkInDate) } },
-                { checkOutDate: { $gt: new Date(data.checkInDate), $lte: new Date(data.checkOutDate) } },
-                { checkInDate: { $lte: new Date(data.checkInDate) }, checkOutDate: { $gte: new Date(data.checkOutDate) } }
-            ]
-        });
-        if (overlaps.length > 0) throw new Error("Room already booked");
+        // const overlaps = await Booking.find({
+        //     room: room._id,
+        //     $or: [
+        //         { checkInDate: { $lt: new Date(data.checkOutDate), $gte: new Date(data.checkInDate) } },
+        //         { checkOutDate: { $gt: new Date(data.checkInDate), $lte: new Date(data.checkOutDate) } },
+        //         { checkInDate: { $lte: new Date(data.checkInDate) }, checkOutDate: { $gte: new Date(data.checkOutDate) } }
+        //     ]
+        // });
+        // if (overlaps.length > 0) throw new Error("Room already booked");
+
+      // 3️⃣ CHECK AVAILABILITY USING SERVICE
+      
+const availableRooms = await checkAvailability(
+    data.checkInDate,
+    data.checkOutDate
+);
+
+const isRoomAvailable = availableRooms.some(
+    r => r._id.toString() === room._id.toString()
+);
+
+if (!isRoomAvailable) {
+    throw new Error("Room not available for selected dates");
+}
+
+
+
+
+
+
+
+
 
         // 4. Get extra services if any
         const services = data.serviceIds ? await ExtraService.find({ _id: { $in: data.serviceIds } }) : [];
