@@ -190,51 +190,43 @@ import { sendRegistrationEmail } from "../services/emailService.js"; // ✅ NEW
 //     res.status(500).json({ message: "Server error during registration" });
 //   }
 // };
-
 export const registerUser = async (req, res) => {
   try {
     const { name, email, contact, password } = req.body;
 
-    if (!name || !email || !password)
-      return res
-        .status(400)
-        .json({ message: "Name, email & password required" });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All required fields missing" });
+    }
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    console.log("➡️ Incoming register:", { name, email: normalizedEmail });   // <---
     const existingUser = await User.findOne({ email: normalizedEmail });
-    console.log("🔍 existingUser:", existingUser);                            // <---
-
-    if (existingUser)
+    if (existingUser) {
       return res.status(400).json({ message: "Email already registered" });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({
-      name,
+    const user = await User.create({
+      name: name.trim(),
       email: normalizedEmail,
-      contact,
+      contact: contact?.trim(),
       password: hashedPassword,
     });
 
-    await user.save();
+    // ⛔ DON'T BLOCK RESPONSE DUE TO EMAIL
+    sendRegistrationEmail(normalizedEmail, name).catch(console.error);
 
-    await sendRegistrationEmail(email, name);
-
-    console.log("✅ New user saved:", user._id);                               // <---
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Registration successful",
-      userId: user._id,
     });
+
   } catch (error) {
     console.error("Register Error:", error);
-    res.status(500).json({ message: "Server error during registration" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // ---------------------------
 // LOGIN USER
