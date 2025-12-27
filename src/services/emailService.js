@@ -216,7 +216,7 @@ dotenv.config();
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,      // smtp.sendgrid.net
   port: Number(process.env.SMTP_PORT), // 587
-  secure: false,
+  secure: true,
   auth: {
     user: process.env.SMTP_USER, // MUST be "apikey"
     pass: process.env.SMTP_PASS, // SendGrid API Key
