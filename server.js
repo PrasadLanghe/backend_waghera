@@ -79,6 +79,8 @@
 
 
 
+import dotenv from "dotenv";
+dotenv.config(); // MUST be at the TOP
 
 
 
@@ -86,7 +88,7 @@ import express from "express";
 
 import cors from "cors";
 
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 
 import path from "path";
 
@@ -122,7 +124,7 @@ import menuRoutes from "./src/routes/menuRoutes.js";
 import uploadRoutes from "./src/routes/uploadRoutes.js";
 
 
-dotenv.config();
+// dotenv.config();
 
 
 // ------------------------------
