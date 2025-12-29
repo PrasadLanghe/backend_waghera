@@ -604,22 +604,46 @@ export const handleCreateBooking = async (req, res) => {
 // ----------------------------
 // GET ALL BOOKINGS
 // ----------------------------
+// ----------------------------
+// GET ALL BOOKINGS (with default contact)
+// ----------------------------
 export const handleGetAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({})
-      .populate('room', 'name price capacity')
-      .populate('user', 'name email phone')
+      .populate('room', 'roomName price status')
+      .populate('user', 'name email contact')
       .populate('extraServices', 'name pricePerNight')
       .sort({ createdAt: -1 });
 
-    res.status(200).json(bookings);
+    // Map through bookings to ensure contact is never undefined
+    const formattedBookings = bookings.map(b => ({
+      _id: b._id,
+      room: b.room,
+      extraServices: b.extraServices,
+      checkInDate: b.checkInDate,
+      checkOutDate: b.checkOutDate,
+      adults: b.adults,
+      children: b.children,
+      extraBed: b.extraBed,
+      totalPrice: b.totalPrice,
+      status: b.status,
+      user: {
+        _id: b.user?._id,
+        name: b.user?.name || "N/A",
+        email: b.user?.email || "N/A",
+        contact: b.user?.contact || "N/A", // default if missing
+      },
+    }));
+
+    res.status(200).json(formattedBookings);
   } catch (err) {
     res.status(500).json({
       message: "Error fetching all bookings.",
-      error: err.message
+      error: err.message,
     });
   }
 };
+
 
 // ----------------------------
 // TEST ROUTE
