@@ -1,20 +1,8 @@
 import express from "express";
 import MenuItem from "../models/MenuItem.js";
-import multer from "multer";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinary.js";
+import upload from "../middleware/multer.js";
 
 const router = express.Router();
-
-// Configure Cloudinary storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "menu_items",
-    allowed_formats: ["jpg", "jpeg", "png"]
-  }
-});
-const parser = multer({ storage });
 
 // ---------------- CRUD ------------------
 
@@ -39,7 +27,7 @@ router.get("/category/:categoryName", async (req, res) => {
 });
 
 // CREATE menu item (with image upload)
-router.post("/", parser.single("image"), async (req, res) => {
+router.post("/", upload.single("image"), async (req, res) => {
   try {
     const { name, description, price, category } = req.body;
 
@@ -58,7 +46,7 @@ router.post("/", parser.single("image"), async (req, res) => {
 });
 
 // UPDATE menu item by ID
-router.put("/:id", parser.single("image"), async (req, res) => {
+router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { name, description, price, category } = req.body;
     const imageUrl = req.file ? req.file.path : undefined;

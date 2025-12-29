@@ -123,8 +123,7 @@ import menuRoutes from "./src/routes/menuRoutes.js";
 
 import uploadRoutes from "./src/routes/uploadRoutes.js";
 
-
-// dotenv.config();
+import adminRoutes from "./src/routes/adminRoutes.js";
 
 
 // ------------------------------
@@ -240,6 +239,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/menu", menuRoutes);
 
 app.use("/api/uploads", uploadRoutes);
+
+app.use("/api/admin", adminRoutes);
 
 
 // ------------------------------
